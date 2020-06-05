@@ -6,10 +6,22 @@ output: html_notebook
 
 
 ```{r}
-#Eventually, this will contain some visualization source code.
+#library(tidyverse)
+data <- read.csv("http://www.stat.cmu.edu/cmsac/sure/materials/data/eda_projects/top_hitters_2019_batted_balls.csv")
+head(data)
+table(data$outcome)
 ```
 
+```{r}
+#angle and velocity color coded by outcome
+data %>% ggplot(aes(x = exit_velocity, y = launch_angle, color = outcome)) + geom_point()
 
+#hit_x and hit_y
+data %>% ggplot(aes(x = hit_x, y = hit_y, color = outcome)) + geom_point(size = 1)
+
+#pitch type and batted_ball_type
+data %>% ggplot(aes(x = batted_ball_type, fill = pitch_type)) + geom_bar(position = "dodge") + facet_wrap( ~ player) + labs(x = "")
+```
 When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
 
 The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
