@@ -9,14 +9,11 @@ output: html_notebook
   3. Three data visualizations exploring the hypothesis, at least two of which must be multivariate. Each visualization must be in a different format from the other two, and you must have at least one categorical and one continuous visualization.
   4. One clustering example
   5. Conclusions reached for the hypothesis using the data visualizations
-  
-**Syntax/Stat Issue List**
-  1. how to remove the underscore from pitch type in visualization 2
-  2. tuning the hyperparameters on the heatmap
-  3. possibly increase size of each facet from visualization 2, difficult to read
+
+It appears that we'll be using Shaw's heat map and cluster, and we will use my diamond and player hit distance.
 
 ```{r}
-#library(tidyverse)
+library(tidyverse)
 data <- read.csv("http://www.stat.cmu.edu/cmsac/sure/materials/data/eda_projects/top_hitters_2019_batted_balls.csv")
 data <- mutate(data,
   outcome = as.character(outcome),
@@ -112,19 +109,24 @@ data %>% ggplot(aes(y = hit_distance, x = exit_velocity, color = Outcome)) + geo
 
 ```{r}
 #Final Visualization One, pending overlay of diamond
-data %>% ggplot(aes(x = hit_x, y = hit_y, color = Outcome)) + geom_point(size = 1, alpha = 0.6) + labs(title = "Final Hit Position on the Diamond", subtitle = "Color Coded by Play Outcome", x = "X Coordinate of Hit", y = "Y Coordinate of Hit") + theme_bw()
+graph1 <- data %>% ggplot(aes(x = hit_x, y = hit_y, color = Outcome)) + 
+  geom_segment(x = 0, xend = 45*sqrt(2), y = 0, yend = 45*sqrt(2), size = 2, color = "black") + 
+  geom_segment(x = 0, xend = -45*sqrt(2), y = 0, yend = 45*sqrt(2), size = 2, color = "black") + 
+  geom_segment(x = 45*sqrt(2), xend = 0, y = 45*sqrt(2), yend = 90*sqrt(2), size = 2, color = "black") +
+  geom_segment(x = -45*sqrt(2), xend = 0, y = 45*sqrt(2), yend = 90*sqrt(2), size = 2, color = "black") +
+  geom_curve(x = 112, xend = -112, y = 100, yend = 100, curvature = 0.51, color = "black", size = 2) +
+  geom_point(size = 1, alpha = 0.6) + 
+  labs(title = "Final Hit Position on the Diamond", subtitle = "Color Coded by Play Outcome", x = "X Coordinate of Hit", y = "Y Coordinate of Hit") + 
+  theme_bw()
+ggsave("Visualization1.png", width = 8, height = 6, path = "C:\\Users\\ashle\\OneDrive\\Documents\\Undergraduate Work\\Summer 2020\\CMSACamp")
 
-#Final Visualization Two, pending size check and label fix on pitch type
-data %>% ggplot(aes(x = hit_distance, color = Pitch_Type)) + geom_histogram(binwidth = 20, position = "dodge") + facet_wrap( ~ Player) + labs(title = "Hit Distances by Pitch Type", subtitle = "Faceted by Player", x = "Distance of Hit", y = "Count") + theme_bw()
+
+#Final Visualization Two
+graph2 <- data %>% ggplot(aes(x = hit_distance, fill = Pitch_Type)) + geom_histogram(binwidth = 20, position = "dodge") + facet_wrap( ~ Player) + labs(title = "Hit Distances by Pitch Type", subtitle = "Faceted by Player", x = "Distance of Hit", y = "Count", fill = "Pitch Type") + theme_bw() + theme(legend.position = "bottom")
+ggsave("Visualization3.png", width = 8, height = 6, path = "C:\\Users\\ashle\\OneDrive\\Documents\\Undergraduate Work\\Summer 2020\\CMSACamp")
 
 #Final Visualization Three will be a heat/contour map, pending tuning of hyperparameters
-#heat map of exit velocity and hit distance, still debating whether to keep points and switch to contour or keep heat map
+#this is a backup, we voted for Shaw's heat map, it fits with our narrative better
 data %>% ggplot(aes(x = exit_velocity, y = hit_distance)) + stat_density2d(aes(fill = after_stat(level)), geom = "polygon") + geom_point(alpha = 0.6) + scale_fill_gradient(low = "darkblue", high = "darkorange")
 ```
 
-
-
-When you save the notebook, an HTML file containing the code and output 
-will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
-
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
