@@ -3,25 +3,128 @@ title: "EDA Notebook #1"
 author: "Ashley E. Mullan"
 output: html_notebook
 ---
-
+**Checklist**  
+  1. Explanation of the data structure of the dataset
+  2. Three hypotheses about the dataset
+  3. Three data visualizations exploring the hypothesis, at least two of which must be multivariate. Each visualization must be in a different format from the other two, and you must have at least one categorical and one continuous visualization.
+  4. One clustering example
+  5. Conclusions reached for the hypothesis using the data visualizations
+  
+**Syntax/Stat Issue List**
+  1. how to remove the underscore from pitch type in visualization 2
+  2. tuning the hyperparameters on the heatmap
+  3. possibly increase size of each facet from visualization 2, difficult to read
 
 ```{r}
 #library(tidyverse)
 data <- read.csv("http://www.stat.cmu.edu/cmsac/sure/materials/data/eda_projects/top_hitters_2019_batted_balls.csv")
+data <- mutate(data,
+  outcome = as.character(outcome),
+  Outcome = case_when(
+    outcome == 'field_out' ~ 'Field Out',
+    outcome == 'home_run' ~ 'Home Run',
+    outcome == 'force_out' ~ 'Force Out',
+    outcome == 'single' ~ 'Single',
+    outcome == 'triple' ~ 'Triple',
+    outcome == 'field_error' ~ 'Field Error',
+    outcome == 'double' ~ 'Double',
+    outcome == 'sac_fly' ~ 'Sacrifice Fly',
+    outcome == 'fielders_choice' ~ 'Fielder\'s Choice',
+    outcome == 'grounded_into_double_play' ~ 'Grounded Into Double Play',
+    outcome == 'double_play' ~ 'Double Play',
+    outcome == 'fielders_choice_out' ~ 'Fielder\'s Choice Out',
+    outcome == 'sac_bunt' ~ 'Sacrifice Bunt',
+    TRUE ~ outcome
+  )
+  
+)
+data <- mutate(data,
+  pitch_type = as.character(pitch_type),
+  Pitch_Type = case_when(
+    pitch_type == 'FF' ~ 'Fastball',
+    pitch_type == 'SI' ~ 'Fastball',
+    pitch_type == 'FT' ~ 'Fastball',
+    pitch_type == 'FC' ~ 'Fastball',
+    pitch_type == 'FS' ~ 'Fastball',
+    pitch_type == 'SL' ~ 'Offspeed',
+    pitch_type == 'CH' ~ 'Offspeed',
+    pitch_type == 'CU' ~ 'Offspeed',
+    pitch_type == 'KC' ~ 'Offspeed',
+    pitch_type == 'KN' ~ 'Offspeed',
+    pitch_type == 'EP' ~ 'Offspeed',
+    pitch_type == 'NULL' ~ 'NULL',
+    TRUE ~ pitch_type
+  )
+)
+
+data <- mutate(data, 
+  player = as.character(player),
+  Player = case_when(
+    player == "trout" ~ 'Mike Trout',
+    player == "yelich" ~ 'Christian Yelich',
+    player == "bellinger" ~ 'Cody Bellinger',
+    player == "bell" ~ 'Josh Bell',
+    player == "gallo" ~ 'Joey Gallo',
+    TRUE ~ player
+  )
+)
 head(data)
-table(data$outcome)
+trout <- data %>% filter(player == "trout")
+yelich <- data %>% filter(player == "yelich")
+bellinger <- data %>% filter(player == "bellinger")
+bell <- data %>% filter(player == "bell")
+gallo <- data %>% filter(player == "gallo")
+```
+
+
+```{r}
+#Graph Tinkering, some of these are selected in next chunk to tentatively present
+
+#angle and velocity color coded by outcome
+data %>% ggplot(aes(x = exit_velocity, y = launch_angle, color = Outcome)) + geom_point()
+
+#hit_x and hit_y color coded by outcome
+data %>% ggplot(aes(x = hit_x, y = hit_y, color = Outcome)) + geom_point(size = 1, alpha = 0.4)
+
+#hit_x and hit_y color coded by outcome and faceted by player
+data %>% ggplot(aes(x = hit_x, y = hit_y, color = Outcome)) + geom_point(size = 1) + facet_wrap( ~ Player)
+
+#pitch type and batted_ball_type
+data %>% ggplot(aes(x = batted_ball_type, fill = Pitch_Type)) + geom_bar(position = "dodge") + facet_wrap( ~ player) + labs(x = "")
+
+#hit distance per pitch type faceted by player
+data %>% ggplot(aes(x = hit_distance, color = Pitch_Type)) + geom_histogram(binwidth = 20, position = "dodge") + facet_wrap( ~ Player)
+
+#hit distance by exit velocity color coded by outcome
+data %>% ggplot(aes(x = hit_distance, y = exit_velocity, color = Outcome)) + geom_point(size = 0.9) #+ facet_wrap( ~ player)
+
+#launch angle by exit velocity color coded by outcome
+data %>% ggplot(aes(x = hit_distance, y = launch_angle, color = Outcome)) + geom_point(size = 0.9)
+
+#heat map of exit velocity and hit distance
+data %>% ggplot(aes(x = exit_velocity, y = hit_distance)) + stat_density2d(aes(fill = after_stat(level)), geom = "polygon") + scale_fill_gradient(low = "darkblue", high = "darkorange")
+
+#hit distance by exit velocity color coded by outcome
+data %>% ggplot(aes(y = hit_distance, x = exit_velocity, color = Outcome)) + geom_point(size = 0.9, alpha = 0.4) #+ facet_wrap( ~ player)
+
+
 ```
 
 ```{r}
-#angle and velocity color coded by outcome
-data %>% ggplot(aes(x = exit_velocity, y = launch_angle, color = outcome)) + geom_point()
+#Final Visualization One, pending overlay of diamond
+data %>% ggplot(aes(x = hit_x, y = hit_y, color = Outcome)) + geom_point(size = 1, alpha = 0.6) + labs(title = "Final Hit Position on the Diamond", subtitle = "Color Coded by Play Outcome", x = "X Coordinate of Hit", y = "Y Coordinate of Hit") + theme_bw()
 
-#hit_x and hit_y
-data %>% ggplot(aes(x = hit_x, y = hit_y, color = outcome)) + geom_point(size = 1)
+#Final Visualization Two, pending size check and label fix on pitch type
+data %>% ggplot(aes(x = hit_distance, color = Pitch_Type)) + geom_histogram(binwidth = 20, position = "dodge") + facet_wrap( ~ Player) + labs(title = "Hit Distances by Pitch Type", subtitle = "Faceted by Player", x = "Distance of Hit", y = "Count") + theme_bw()
 
-#pitch type and batted_ball_type
-data %>% ggplot(aes(x = batted_ball_type, fill = pitch_type)) + geom_bar(position = "dodge") + facet_wrap( ~ player) + labs(x = "")
+#Final Visualization Three will be a heat/contour map, pending tuning of hyperparameters
+#heat map of exit velocity and hit distance, still debating whether to keep points and switch to contour or keep heat map
+data %>% ggplot(aes(x = exit_velocity, y = hit_distance)) + stat_density2d(aes(fill = after_stat(level)), geom = "polygon") + geom_point(alpha = 0.6) + scale_fill_gradient(low = "darkblue", high = "darkorange")
 ```
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+
+
+When you save the notebook, an HTML file containing the code and output 
+will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
 
 The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
